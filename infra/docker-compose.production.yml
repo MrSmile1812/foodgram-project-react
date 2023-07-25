@@ -11,15 +11,14 @@ services:
 
   db:
     image: postgres:13.10-alpine
-    env_file: .env
+    env_file: ./.env
     volumes:
       - db_data:/var/lib/postgresql/data/
 
   backend:
-    build: ../backend/
-    env_file: .env
+    image: mrsmile1812/food_backend:v.1.0
+    env_file: ./.env
     volumes:
-      - ../backend/:/app
       - static_value:/app/static/
       - media_value:/app/media/
       - redoc:/app/api/docs/
@@ -27,13 +26,13 @@ services:
       - db
 
   frontend:
-    env_file: .env
-    build: ../frontend/
+    env_file: ./.env
+    image: mrsmile1812/food_frontend:v.1.0
     volumes:
       - ../frontend/:/app/result_build/
 
   nginx:
-    env_file: .env
+    env_file: ./.env
     image: nginx:1.21.3-alpine
     restart: always
     ports:
