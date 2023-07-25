@@ -7,7 +7,7 @@ on:
 
 jobs:
   linter_tests:
-    name: PEP8 check
+    name: Test with flake8
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
