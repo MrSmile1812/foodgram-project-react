@@ -112,6 +112,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
 }
 
+
 DJOSER = {
     "LOGIN_FIELD": "email",
     "USER_ID_FIELD": "id",
