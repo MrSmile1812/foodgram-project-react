@@ -28,3 +28,11 @@ class FollowAdmin(admin.ModelAdmin):
     list_display = ("user", "author")
     list_filter = ("user", "author")
     search_fields = ("user", "author")
+
+    def get_queryset(self, request):
+        qs = (
+            super(FollowAdmin, self)
+            .get_queryset(request)
+            .select_related("user")
+        )
+        return qs.prefetch_related("author")

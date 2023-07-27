@@ -8,16 +8,16 @@ class User(AbstractUser):
     username_validator = UnicodeUsernameValidator()
 
     username = models.CharField(
-        verbose_name="Username",
+        verbose_name="Никнейм",
         max_length=150,
         unique=True,
         help_text=(
-            "Required. 150 characters or fewer. "
-            "Letters, digits and @/./+/-/_ only."
+            "Обязательное поле. Максимум 150 символов."
+            "Только буквы, цифры и @/./+/-/_."
         ),
         validators=[username_validator],
         error_messages={
-            "unique": ("A user with that username already exists."),
+            "unique": ("Пользователь с таким никнеймом уже существует."),
         },
     )
     email = models.EmailField(
@@ -75,6 +75,6 @@ class Follow(models.Model):
         ordering = ("user",)
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "author"], name="unique_follow"
+                fields=["user", "author"], name="uq_user_author"
             )
         ]

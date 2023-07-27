@@ -2,15 +2,15 @@ from django.contrib import admin
 
 from recipes.models import (
     Favorite,
-    Ingredients,
-    IngredientsInRecipes,
-    Recipes,
+    Ingredient,
+    IngredientInRecipe,
+    Recipe,
     ShoppingCart,
-    Tags,
+    Tag,
 )
 
 
-@admin.register(Tags)
+@admin.register(Tag)
 class TagsAdmin(admin.ModelAdmin):
     list_display = (
         "name",
@@ -25,7 +25,7 @@ class TagsAdmin(admin.ModelAdmin):
     empty_value_display = "-пусто-"
 
 
-@admin.register(Ingredients)
+@admin.register(Ingredient)
 class IngredientsAdmin(admin.ModelAdmin):
     list_display = (
         "name",
@@ -36,7 +36,7 @@ class IngredientsAdmin(admin.ModelAdmin):
     ordering = ("name",)
 
 
-@admin.register(IngredientsInRecipes)
+@admin.register(IngredientInRecipe)
 class AmountIngredientAdmin(admin.ModelAdmin):
     list_display = (
         "ingredient",
@@ -46,12 +46,12 @@ class AmountIngredientAdmin(admin.ModelAdmin):
 
 
 class IngredientInRecipesAmountInline(admin.TabularInline):
-    model = IngredientsInRecipes
+    model = IngredientInRecipe
     extra = 1
     min_num = 1
 
 
-@admin.register(Recipes)
+@admin.register(Recipe)
 class RecipesAdmin(admin.ModelAdmin):
     list_display = (
         "name",
@@ -70,6 +70,17 @@ class RecipesAdmin(admin.ModelAdmin):
     )
     ordering = ("name",)
     empty_value_display = "-пусто-"
+
+    def get_queryset(self, request):
+        return (
+            super(RecipesAdmin, self)
+            .get_queryset(request)
+            .prefetch_related(
+                "tags",
+                "ingredients",
+            )
+            .select_related("author")
+        )
 
     def get_in_favorites(self, obj):
         return obj.favorite_recipes.count()

@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", default="any_string")
 
-DEBUG = bool(os.getenv("DEBUG", ""))
+DEBUG = os.getenv("DEBUG", False).lower() == "true"
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 
@@ -22,10 +22,10 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "djoser",
+    "django_filters",
     "user.apps.UserConfig",
     "recipes.apps.RecipesConfig",
     "api.apps.ApiConfig",
-    "django_filters",
 ]
 
 MIDDLEWARE = [

@@ -6,15 +6,15 @@ from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
 
 from django.db.models import Sum
-from django.shortcuts import get_object_or_404
+from django.shortcuts import HttpResponse, get_object_or_404
 
 from recipes.models import (
     Favorite,
-    Ingredients,
-    IngredientsInRecipes,
-    Recipes,
+    Ingredient,
+    IngredientInRecipe,
+    Recipe,
     ShoppingCart,
-    Tags,
+    Tag,
 )
 from user.models import Follow, User
 
@@ -30,20 +30,20 @@ from .serializers import (
     TagsSerializer,
     UserSerializer,
 )
-from .utils import shopping_cart_file
+from .utils import create_shopping_cart_file
 
 
 class TagsViewSet(viewsets.ModelViewSet):
     """Класс для работы с моделью Tags."""
 
-    queryset = Tags.objects.all()
+    queryset = Tag.objects.all()
     serializer_class = TagsSerializer
 
 
 class IngredientsViewSet(viewsets.ModelViewSet):
     """Класс для работы с Ingredients."""
 
-    queryset = Ingredients.objects.all()
+    queryset = Ingredient.objects.all()
     serializer_class = IngredientsSerializer
     filter_backends = [IngredientFilter]
     search_fields = ("^name",)
@@ -101,7 +101,14 @@ class UsersViewSet(UserViewSet):
 class RecipesViewSet(viewsets.ModelViewSet):
     """Класс для работы с моделью Recipes."""
 
-    queryset = Recipes.objects.all()
+    queryset = (
+        Recipe.objects.prefetch_related(
+            "tags",
+            "ingredients",
+        )
+        .select_related("author")
+        .all()
+    )
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     permission_class = (AuthorOrReadOnly,)
@@ -113,7 +120,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return RecipesWriteSerializer
 
     def post_delete_recipe(self, request, pk, model):
-        recipe = get_object_or_404(Recipes, pk=pk)
+        recipe = get_object_or_404(Recipe, pk=pk)
         user = self.request.user
         if request.method == "POST":
             serializer = ShoppingListFavoiriteSerializer(recipe)
@@ -126,14 +133,12 @@ class RecipesViewSet(viewsets.ModelViewSet):
             model.objects.create(user=user, recipe=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
-            if model.objects.filter(user=user, recipe=recipe).exists():
-                model.objects.get(user=user, recipe=recipe).delete()
+            if model.objects.filter(user=user, recipe=recipe).delete():
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response(
-                    {"errors": "Рецепт уже удален!"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+            return Response(
+                {"errors": "Рецепт уже удален!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     @action(
         methods=["POST", "DELETE"],
@@ -152,7 +157,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     @action(methods=["GET"], detail=False, permission_class=(IsAuthenticated,))
     def download_shopping_cart(self, request):
-        ingredients = IngredientsInRecipes.objects.select_related(
+        ingredients = IngredientInRecipe.objects.select_related(
             "recipe", "ingredient"
         )
         ingredients = ingredients.filter(
@@ -163,4 +168,12 @@ class RecipesViewSet(viewsets.ModelViewSet):
         )
         ingredients = ingredients.annotate(amount_sum=Sum("amount"))
         ingredients = ingredients.order_by("ingredient__name")
-        return shopping_cart_file(ingredients)
+        shopping_list = create_shopping_cart_file(ingredients)
+        response = HttpResponse(
+            shopping_list, content_type="text/plain; charset=utf8"
+        )
+        response[
+            "Content-Disposition"
+        ] = 'attachment; filename="shopping_cart.txt"'
+
+        return response
