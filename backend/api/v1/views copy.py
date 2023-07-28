@@ -147,6 +147,14 @@ class RecipesViewSet(viewsets.ModelViewSet):
             obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
+            # result = model.objects.filter(user=user, recipe=recipe).delete()
+            # if result != ():
+            #     return Response(status=status.HTTP_204_NO_CONTENT)
+            # return Response(
+            #     {"errors": "Рецепт уже удален!"},
+            #     status=status.HTTP_400_BAD_REQUEST,
+            # )
+
     @action(
         methods=["POST", "DELETE"],
         detail=True,

@@ -10,4 +10,4 @@ COPY . .
 
 ENTRYPOINT ["sh", "entrypoint.sh"]
 
-CMD ["entrypoint.sh"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "foodgram_backend.wsgi"]
