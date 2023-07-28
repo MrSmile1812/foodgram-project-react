@@ -1,6 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from rest_framework import status, viewsets
+from rest_framework import exceptions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
@@ -53,7 +53,6 @@ class UsersViewSet(UserViewSet):
     """Класс для работы с User."""
 
     serializer_class = UserSerializer
-    pagination_class = CustomPaginator
 
     def get_queryset(self):
         return User.objects.all().annotate(recipes_count=Count("recipes"))
@@ -72,6 +71,7 @@ class UsersViewSet(UserViewSet):
         methods=["GET"],
         detail=False,
         permission_classes=(IsAuthenticated,),
+        pagination_class=CustomPaginator,
     )
     def subscriptions(self, request):
         user = self.request.user
@@ -89,31 +89,41 @@ class UsersViewSet(UserViewSet):
         detail=True,
         permission_classes=(IsAuthenticated,),
     )
-    def subscribe(self, request, id):
+    def subscribe(self, request, id=None):
         user = request.user
-        author = get_object_or_404(User, id=id)
+        author = get_object_or_404(User, pk=id)
+
+        follow_search = Follow.objects.filter(user=user, author=author)
+
         if request.method == "POST":
-            serializer = FollowSerializer(
-                Follow.objects.create(user=user, author=author),
-                context={"request": request},
-            )
+            if user == author:
+                raise exceptions.ValidationError(
+                    "Подписываться на себя запрещено."
+                )
+            if follow_search.exists():
+                raise exceptions.ValidationError(
+                    "Вы уже подписаны на этого пользователя."
+                )
+            Follow.objects.create(user=user, author=author)
+            serializer = self.get_serializer(author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        Follow.objects.filter(user=user, author=author).delete()
-        return Response("Успешная отписка", status=status.HTTP_204_NO_CONTENT)
+
+        if request.method == "DELETE":
+            if not follow_search.exists():
+                raise exceptions.ValidationError(
+                    "Вы не подписаны на этого пользователя."
+                )
+            Follow.objects.filter(user=user, author=author).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
     """Класс для работы с моделью Recipes."""
 
-    queryset = (
-        Recipe.objects.prefetch_related(
-            "tags",
-            "ingredients",
-        )
-        .select_related("author")
-        .all()
-    )
-
+    queryset = Recipe.objects.prefetch_related(
+        "tags",
+        "ingredients",
+    ).select_related("author")
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     permission_class = (AuthorOrReadOnly,)
@@ -138,14 +148,12 @@ class RecipesViewSet(viewsets.ModelViewSet):
             model.objects.create(user=user, recipe=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
-            obj = self.get_queryset().filter(user=user, recipe=recipe)
-            if not obj.exists():
-                return Response(
-                    {"errors": "Рецепт уже удален!"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            obj.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            if model.objects.filter(user=user, recipe=recipe).delete():
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {"errors": "Рецепт уже удален!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     @action(
         methods=["POST", "DELETE"],

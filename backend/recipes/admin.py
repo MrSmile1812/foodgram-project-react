@@ -99,6 +99,16 @@ class FavoriteAdmin(admin.ModelAdmin):
     search_fields = ("user", "recipe")
     empty_value_display = "-пусто-"
 
+    def get_queryset(self, request):
+        return (
+            super(FavoriteAdmin, self)
+            .get_queryset(request)
+            .prefetch_related(
+                "user",
+                "recipe",
+            )
+        )
+
 
 @admin.register(ShoppingCart)
 class BuyListAdmin(admin.ModelAdmin):
@@ -112,3 +122,13 @@ class BuyListAdmin(admin.ModelAdmin):
     )
     search_fields = ("user",)
     empty_value_display = "-пусто-"
+
+    def get_queryset(self, request):
+        return (
+            super(BuyListAdmin, self)
+            .get_queryset(request)
+            .prefetch_related(
+                "user",
+                "recipe",
+            )
+        )
