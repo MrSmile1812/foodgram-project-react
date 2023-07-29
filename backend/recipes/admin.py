@@ -103,10 +103,6 @@ class FavoriteAdmin(admin.ModelAdmin):
         return (
             super(FavoriteAdmin, self)
             .get_queryset(request)
-            .prefetch_related(
-                "user",
-                "recipe",
-            )
             .select_related("user", "recipe")
         )
 
@@ -128,9 +124,5 @@ class BuyListAdmin(admin.ModelAdmin):
         return (
             super(BuyListAdmin, self)
             .get_queryset(request)
-            .prefetch_related(
-                "user",
-                "recipe",
-            )
             .select_related("user", "recipe")
         )

@@ -126,7 +126,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     ).select_related("author")
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    permission_class = (AuthorOrReadOnly,)
+    permission_class = [AuthorOrReadOnly]
     pagination_class = CustomPaginator
 
     def get_serializer_class(self):
@@ -148,14 +148,14 @@ class RecipesViewSet(viewsets.ModelViewSet):
             model.objects.create(user=user, recipe=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
-            try:
-                model.objects.filter(user=user, recipe=recipe).delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            except Exception:
-                Response(
-                    {"errors": "Такого рецепта нет."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+            obj = model.objects.filter(user=user, recipe=recipe)
+        if obj.exists():
+            obj.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"errors": "Рецепт уже убран!"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     @action(
         methods=["POST", "DELETE"],
