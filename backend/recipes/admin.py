@@ -107,6 +107,7 @@ class FavoriteAdmin(admin.ModelAdmin):
                 "user",
                 "recipe",
             )
+            .select_related("user", "recipe")
         )
 
 
@@ -131,4 +132,5 @@ class BuyListAdmin(admin.ModelAdmin):
                 "user",
                 "recipe",
             )
+            .select_related("user", "recipe")
         )

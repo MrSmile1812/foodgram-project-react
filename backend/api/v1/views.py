@@ -145,13 +145,15 @@ class RecipesViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            model.objects.create(user=user, recipe=recipe)
+            model.objects.create(user=user, rsecipe=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
-            if model.objects.filter(user=user, recipe=recipe).delete():
+            recipe = model.objects.filter(user=user, recipe=recipe)
+            if recipe:
+                recipe.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response(
-                {"errors": "Рецепт уже удален!"},
+            Response(
+                {"errors": "Такого рецепта нет."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -189,6 +191,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
         )
         response[
             "Content-Disposition"
-        ] = 'attachment; filename="shopping_cart.txt"'
+        ] = "attachment; filename='shopping_cart.txt'"
 
         return response

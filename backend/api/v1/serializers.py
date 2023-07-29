@@ -170,9 +170,6 @@ class FollowSerializer(serializers.ModelSerializer):
             )
         return data
 
-    def get_recipes_count(self, obj):
-        return obj.recipes.count()
-
     def get_recipes(self, obj):
         request = self.context.get("request")
         query_params = request.query_params
