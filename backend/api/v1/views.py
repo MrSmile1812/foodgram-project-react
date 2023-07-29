@@ -148,14 +148,14 @@ class RecipesViewSet(viewsets.ModelViewSet):
             model.objects.create(user=user, recipe=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
-            recipe = model.objects.filter(user=user, recipe=recipe)
-            if recipe:
-                recipe.delete()
+            try:
+                model.objects.filter(user=user, recipe=recipe).delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            Response(
-                {"errors": "Такого рецепта нет."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            except Exception:
+                Response(
+                    {"errors": "Такого рецепта нет."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
     @action(
         methods=["POST", "DELETE"],
