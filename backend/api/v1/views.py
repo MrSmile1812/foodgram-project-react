@@ -109,12 +109,15 @@ class UsersViewSet(UserViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == "DELETE":
-            if not follow_search.exists():
-                raise exceptions.ValidationError(
-                    "Вы не подписаны на этого пользователя."
+            if (Follow.objects.filter(user=user, author=author).delete())[
+                0
+            ] != 0:
+                return Response(
+                    status=status.HTTP_204_NO_CONTENT,
                 )
-            Follow.objects.filter(user=user, author=author).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            raise exceptions.ValidationError(
+                "Вы не подписаны на этого пользователя."
+            )
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
@@ -141,21 +144,23 @@ class RecipesViewSet(viewsets.ModelViewSet):
             serializer = ShoppingListFavoiriteSerializer(recipe)
             if model.objects.filter(user=user, recipe=recipe).exists():
                 return Response(
-                    {"errors": "Рецепт уже добавлен!"},
+                    {"errors": "Рецепт  уже добавлен!"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
             model.objects.create(user=user, recipe=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
-            obj = model.objects.filter(user=user, recipe=recipe)
-        if obj.exists():
-            obj.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {"errors": "Рецепт уже убран!"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+            if (model.objects.filter(user=user, recipe=recipe).delete())[
+                0
+            ] != 0:
+                return Response(
+                    status=status.HTTP_204_NO_CONTENT,
+                )
+            return Response(
+                {"errors": "Рецепт уже убран!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     @action(
         methods=["POST", "DELETE"],
@@ -168,6 +173,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     @action(
         methods=["POST", "DELETE"],
         detail=True,
+        permission_class=(IsAuthenticated,),
     )
     def shopping_cart(self, request, **kwargs):
         return self.post_delete_recipe(request, kwargs.pop("pk"), ShoppingCart)
