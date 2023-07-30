@@ -30,9 +30,8 @@ class FollowAdmin(admin.ModelAdmin):
     search_fields = ("user", "author")
 
     def get_queryset(self, request):
-        qs = (
+        return (
             super(FollowAdmin, self)
             .get_queryset(request)
-            .select_related("user")
+            .select_related("user", "author")
         )
-        return qs.select_related("user", "author")

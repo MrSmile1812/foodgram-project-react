@@ -74,7 +74,9 @@ sudo docker compose stop         # без удаления
 3. Разворачивание проекта на удаленном сервере
 4. Отправка сообщения в Telegram в случае успеха
 
-Проект доступен по ссылке: https://myfoodgram.ddnsking.com
+- Проект: 
+Домен: https://myfoodgram.ddnsking.com
+ip: 84.201.177.135
 - Данные админа:
 Почта: prokofev987@yandex.ru
 Пароль: 11119999!
