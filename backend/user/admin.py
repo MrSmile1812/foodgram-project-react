@@ -16,12 +16,17 @@ class UserAdmin(admin.ModelAdmin):
         "username",
         "email",
     )
+    list_filter = (
+        "first_name",
+        "email",
+    )
     list_display_links = ("username",)
 
 
 @admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):
     list_display = ("user", "author")
+    list_filter = ("author",)
     search_fields = ("user", "author")
 
     def get_queryset(self, request):
