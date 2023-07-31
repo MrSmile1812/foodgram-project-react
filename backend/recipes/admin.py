@@ -21,7 +21,6 @@ class TagsAdmin(admin.ModelAdmin):
         "name",
         "slug",
     )
-    list_filter = ("name",)
     empty_value_display = "-пусто-"
 
 
@@ -32,7 +31,6 @@ class IngredientsAdmin(admin.ModelAdmin):
         "measurement_unit",
     )
     search_fields = ("name",)
-    list_filter = ("name",)
     ordering = ("name",)
 
 
@@ -58,15 +56,11 @@ class RecipesAdmin(admin.ModelAdmin):
         "author",
         "get_in_favorites",
     )
-    list_filter = (
-        "name",
-        "author",
-        "tags",
-    )
     inlines = (IngredientInRecipesAmountInline,)
     search_fields = (
         "name",
         "author",
+        "tags",
     )
     ordering = ("name",)
     empty_value_display = "-пусто-"
@@ -92,10 +86,6 @@ class FavoriteAdmin(admin.ModelAdmin):
         "user",
         "recipe",
     )
-    list_filter = (
-        "user",
-        "recipe",
-    )
     search_fields = ("user", "recipe")
     empty_value_display = "-пусто-"
 
@@ -113,11 +103,10 @@ class BuyListAdmin(admin.ModelAdmin):
         "user",
         "recipe",
     )
-    list_filter = (
+    search_fields = (
         "user",
         "recipe",
     )
-    search_fields = ("user",)
     empty_value_display = "-пусто-"
 
     def get_queryset(self, request):
