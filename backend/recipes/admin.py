@@ -21,7 +21,6 @@ class TagsAdmin(admin.ModelAdmin):
         "name",
         "slug",
     )
-    list_filter = ("name",)
     empty_value_display = "-пусто-"
 
 
